@@ -1,0 +1,26 @@
+{
+  "name": "Thirdspace-Backend-Api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "ts-node-dev --respawn --transpile-only --exit-child src/app.ts",
+    "db:migrate": "npx prisma migrate dev --name user-entity --create-only && yarn prisma generate",
+    "db:push": "npx prisma db push",
+    "build": "tsc . -p"
+  },
+  "devDependencies": {
+    "@types/config": "^3.3.0",
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.4.1",
+    "prisma": "^4.16.2",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@prisma/client": "^4.16.2",
+    "config": "^3.3.9",
+    "dotenv": "^16.3.1",
+    "envalid": "^7.3.1",
+    "ts-node-dev": "^2.0.0"
+  }
+}
