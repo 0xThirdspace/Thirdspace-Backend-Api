@@ -1,11 +1,5 @@
 import { db } from "../../../utils/db.server";
-
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-};
+import { User } from "../auth/auth.service";
 
 export const getAllUsers = async (): Promise<Omit<User, "password">[]> => {
   const users = await db.user.findMany({

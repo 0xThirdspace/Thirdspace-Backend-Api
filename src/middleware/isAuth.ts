@@ -27,7 +27,6 @@ const authenticateToken = (
 
   try {
     const jwtToken = new JwtToken(process.env.JWT_SECRET);
-    console.log(process.env.JWT_SECRET);
     decodedToken = jwtToken.verifyToken(token);
   } catch (err) {
     console.log(err);

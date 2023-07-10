@@ -79,15 +79,3 @@ export const Login = async (
 
   return { secureUser, token };
 };
-
-export const getAllUsers = async (): Promise<Omit<User, "password">[]> => {
-  const users = await db.user.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  });
-
-  return users.map(({ id, name, email }) => ({ id, name, email }));
-};
