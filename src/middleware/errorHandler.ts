@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 
 interface CustomError extends Error {
   status?: number;
@@ -15,9 +15,15 @@ class CustomErrorClass extends Error implements CustomError {
   }
 }
 
-function errorHandler(error: CustomErrorClass, req: Request, res: Response, next: NextFunction) {
+function errorHandler(
+  error: CustomErrorClass,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   res.status(error.status || 500);
-  res.send({ error: true, message: error.message || 'Internal server error' });
+  console.log(error);
+  res.send({ error: true, message: error.message || "Internal server error" });
 }
 
 export = errorHandler;

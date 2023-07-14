@@ -27,7 +27,6 @@ async function bootstrap() {
   app.use(router);
   app.use(errorHandler);
 
-
   const port = config.get<number>("port");
   app.listen(port, () => {
     console.log(`Server on port: ${port}`);

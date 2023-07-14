@@ -3,10 +3,13 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 class WorkspaceService {
-  static async createWorkspace(userId: string, workspaceName: string, imageUrl?: string) {
+  static async createWorkspace(
+    userId: string,
+    workspaceName: string,
+    imageUrl?: any
+  ) {
     if (!workspaceName) {
-      throw new Error("You need to provide a workspace name"); 
-      
+      throw new Error("You need to provide a workspace name");
     }
 
     const existingWorkspaceName = await prisma.workspace.findFirst({
@@ -16,7 +19,7 @@ class WorkspaceService {
     });
 
     if (existingWorkspaceName) {
-      throw new Error("Workspace name already exists"); 
+      throw new Error("Workspace name already exists");
     }
 
     const existingWorkspace = await prisma.workspace.findFirst({
@@ -26,7 +29,7 @@ class WorkspaceService {
     });
 
     if (existingWorkspace) {
-      throw new Error("User can only create a single workspace."); 
+      throw new Error("User can only create a single workspace.");
     }
 
     const workspace = await prisma.workspace.create({
