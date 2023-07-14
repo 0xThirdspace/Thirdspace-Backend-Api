@@ -10,6 +10,9 @@ const validateEnv = () => {
     POSTGRES_PASSWORD: str(),
     POSTGRES_DB: str(),
     JWT_SECRET: str(),
+    cloud_name: str(),
+    api_key: str(),
+    api_secret: str(),
   });
 };
 
