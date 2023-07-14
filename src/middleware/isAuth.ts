@@ -11,16 +11,16 @@ const authenticateToken = (
   res: Response,
   next: NextFunction
 ): void | Response<any, Record<string, any>> => {
-  const authHeader = req.headers.authorization!;
+  const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(404).json("Invalid Access Tokens");
+    return res.status(401).json({ message: "Invalid Access Token" });
   }
 
   const token = authHeader.split(" ")[1];
 
-  if (!token || token === " ") {
-    return res.status(404).json("Invalid Access Tokens");
+  if (!token || token === "") {
+    return res.status(401).json({ message: "Invalid Access Token" });
   }
 
   let decodedToken: any;
@@ -30,11 +30,11 @@ const authenticateToken = (
     decodedToken = jwtToken.verifyToken(token);
   } catch (err) {
     console.log(err);
-    return res.status(404).json("Invalid Access Tokens");
+    return res.status(401).json({ message: "Invalid Access Token" });
   }
 
-  if (!decodedToken) {
-    return res.status(404).json("Invalid Access Tokens");
+  if (!decodedToken || !decodedToken.userId) {
+    return res.status(401).json({ message: "Invalid Access Token" });
   }
 
   req.isAuth = true;

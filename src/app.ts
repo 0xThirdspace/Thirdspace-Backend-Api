@@ -2,6 +2,7 @@ require("dotenv").config();
 import express, { Request, Response } from "express";
 import config from "config";
 import validateEnv from "../utils/validateEnv";
+import errorHandler from "./middleware/errorHandler";
 import { PrismaClient } from "@prisma/client";
 import cors from "cors";
 import router from "./routes/index";
@@ -24,6 +25,8 @@ async function bootstrap() {
   });
 
   app.use(router);
+  app.use(errorHandler);
+
 
   const port = config.get<number>("port");
   app.listen(port, () => {
