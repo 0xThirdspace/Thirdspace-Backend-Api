@@ -20,12 +20,16 @@ router.post(
   authenticateToken,
   upload.any(),
   async (req: Request, res: Response, next: NextFunction) => {
-    const files = req.files as Express.Multer.File[];
-    const image = files[0];
     try {
+      const files = req.files as Express.Multer.File[];
       const { workspace_name } = req.body;
-      const imageUrl = image.path;
       const userId = (req as any).userId;
+      let imageUrl = null;
+
+      if (files.length > 0) {
+        const image = files[0];
+        imageUrl = image.path;
+      }
 
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
