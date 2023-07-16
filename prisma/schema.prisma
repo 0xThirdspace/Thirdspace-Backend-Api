@@ -21,7 +21,7 @@ model User {
 
 model Workspace {
   id             String   @id @default(uuid())
-  workspace_name String   @db.VarChar(255)
+  workspace_name String   @unique
   imageUrl       String?  @default("workspace.png")
   userId         String   @unique
   user           User     @relation(fields: [userId], references: [id])
@@ -43,13 +43,14 @@ model Bounty {
   createdByUser      User      @relation("CreatedByUser", fields: [userId], references: [id])
   workspace          Workspace @relation(fields: [workspaceId], references: [id])
   participants       User[]    @relation("Participant")
-  status             Status    @default(inprogress)
+  status             Status    @default(pending)
 
   @@index([title], name: "title_index")
   @@map(name: "bounties")
 }
 
 enum Status {
-  inprogress
-  completed
+  pending
+  active
+  closed
 }

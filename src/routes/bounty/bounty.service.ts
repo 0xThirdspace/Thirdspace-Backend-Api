@@ -1,11 +1,20 @@
-import { PrismaClient, Bounty, Status } from '@prisma/client';
+import { PrismaClient, Bounty, User } from '@prisma/client';
 
 const prisma = new PrismaClient();
+
+enum Status {
+  PENDING = 'pending',
+  ACTIVE = 'active',
+  CLOSED = 'closed',
+}
 
 interface ErrorResponse {
   error: string;
   statusCode?: number;
-}
+  userId?: string;
+  }
+  
+
 
 class BountyService {
   static async createBounty(
@@ -99,25 +108,16 @@ class BountyService {
     }
   }
 
-  static async deleteBounty(
-    userId: string,
-    bountyId: string
-  ): Promise<Bounty | null | ErrorResponse> {
+  static async getBountyById(bountyId: string): Promise<Bounty | null | ErrorResponse> {
     try {
-      const bounty = await prisma.bounty.findFirst({
+      const bounty = await prisma.bounty.findUnique({
         where: {
           id: bountyId,
-          userId,
         },
-      });
-
-      if (!bounty) {
-        return null;
-      }
-
-      await prisma.bounty.delete({
-        where: {
-          id: bountyId,
+        include: {
+          createdByUser: true,
+          workspace: true,
+          participants: true,
         },
       });
 
@@ -125,9 +125,75 @@ class BountyService {
     } catch (error) {
       console.error(error); // Log the error for debugging purposes
 
+      return { error: 'An error occurred while retrieving the bounty.' };
+    }
+  }
+
+  static async isParticipantJoined(bountyId: string, userId: string): Promise<boolean> {
+    try {
+      const bounty = await prisma.bounty.findUnique({
+        where: {
+          id: bountyId,
+        },
+        include: {
+          participants: true,
+        },
+      });
+
+      if (!bounty) {
+        return false;
+      }
+
+      const participants = bounty.participants.map((participant) => participant.id);
+      return participants.includes(userId);
+    } catch (error) {
+      console.error(error); // Log the error for debugging purposes
+      return false;
+    }
+  }
+  
+
+  static async deleteBounty(
+    userId: string,
+    bountyId: string,
+  ): Promise<Bounty | null | ErrorResponse> {
+    try {
+      const bounty = await prisma.bounty.findFirst({
+        where: {
+          id: bountyId,
+          userId,
+        },
+        include: {
+          createdByUser: true,
+          workspace: true,
+          participants: true,
+        },
+      });
+  
+      if (!bounty) {
+        return null;
+      }
+  
+      if (bounty.status !== 'closed') {
+        return null;
+      }
+  
+      await prisma.bounty.delete({
+        where: {
+          id: bountyId,
+        },
+      });
+  
+      return bounty;
+    } catch (error) {
+      console.error(error); // Log the error for debugging purposes
+  
       return { error: 'An error occurred while deleting the bounty.' };
     }
   }
+  
+  
+  
 
   static async deleteAllBountiesCreatedByUser(
     userId: string
@@ -146,6 +212,23 @@ class BountyService {
       };
     }
   }
+
+  static async getExistingBounty(userId: string): Promise<Bounty | null> {
+    try {
+      const bounty = await prisma.bounty.findFirst({
+        where: {
+          userId,
+        },
+      });
+
+      return bounty;
+    } catch (error) {
+      console.error(error); // Log the error for debugging purposes
+
+      return null;
+    }
+  }
+
   static async updateBountyStatus(
     userId: string,
     bountyId: string,
@@ -161,10 +244,6 @@ class BountyService {
 
       if (!bounty) {
         return null;
-      }
-
-      if (status && status !== 'completed' && status !== 'inprogress') {
-        throw new Error('Invalid status. Only "completed" and "inprogress" are allowed.');
       }
 
       const updatedBounty = await prisma.bounty.update({
@@ -188,6 +267,7 @@ class BountyService {
       return { error: 'An error occurred while updating the bounty status.' };
     }
   }
+
   static async updateBounty(
     userId: string,
     bountyId: string,
@@ -227,7 +307,90 @@ class BountyService {
     }
   }
 
- 
+  static async addParticipant(
+    bountyId: string,
+    userId: string
+  ): Promise<Bounty | ErrorResponse> {
+    try {
+      const bounty = await prisma.bounty.findUnique({
+        where: {
+          id: bountyId,
+        },
+        include: {
+          createdByUser: true,
+          workspace: true,
+          participants: true,
+        },
+      });
+  
+      if (!bounty) {
+        return { error: 'Bounty not found.', statusCode: 404 };
+      }
+  
+      if (bounty.createdByUser.id === userId) {
+        return { error: 'You cannot join your own bounty.', statusCode: 403 };
+      }
+  
+      const participant = await prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+  
+      if (!participant) {
+        return { error: 'User not found.', statusCode: 404 };
+      }
+  
+      const updatedBounty = await prisma.bounty.update({
+        where: {
+          id: bountyId,
+        },
+        data: {
+          participants: {
+            connect: {
+              id: userId,
+            },
+          },
+        },
+        include: {
+          createdByUser: true,
+          workspace: true,
+          participants: true,
+        },
+      });
+  
+      return updatedBounty;
+    } catch (error) {
+      console.error(error); // Log the error for debugging purposes
+  
+      return { error: 'An error occurred while adding the participant to the bounty.', statusCode: 500 };
+    }
+  }
+  static async getAllParticipants(bountyId: string): Promise<(User | ErrorResponse)[]> {
+    try {
+      const bounty = await prisma.bounty.findUnique({
+        where: {
+          id: bountyId,
+        },
+        include: {
+          participants: true,
+        },
+      });
+
+      if (!bounty) {
+        return [];
+      }
+
+      const participants = bounty.participants;
+
+      return participants;
+    } catch (error) {
+      console.error(error); // Log the error for debugging purposes
+
+      return [{ error: 'An error occurred while retrieving the participants.' }];
+    }
+  }
+
 }
 
 export default BountyService;
