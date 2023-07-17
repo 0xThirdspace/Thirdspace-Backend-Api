@@ -17,5 +17,12 @@ This pull request includes changes related to workspace and bounties in the appl
 
 
 
+## Changes Made
+
+- Created the endpoint to get the list of members under the bounty
+- Created the endpoint for user to join the bounty
+- Created the endpoint to delete workspace and update workspace
+- Created the endpoint for user to search for their workspace name
+- Created the endpoint for user to be able to update the bounty status from pending or active to closed
 
 
