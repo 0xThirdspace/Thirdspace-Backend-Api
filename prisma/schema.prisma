@@ -12,6 +12,7 @@ model User {
   name                 String     @db.VarChar(255)
   email                String     @unique
   password             String
+  profileImage         String?    @default("user.png")
   workspace            Workspace?
   createdBounties      Bounty[]   @relation("CreatedByUser")
   participatedBounties Bounty[]   @relation("Participant")
