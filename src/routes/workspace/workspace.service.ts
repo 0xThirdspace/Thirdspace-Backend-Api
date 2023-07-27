@@ -94,12 +94,14 @@ class WorkspaceService {
     return updatedWorkspace;
   }
 
- 
   static async getWorkspaceByName(userId: string, workspaceName: string) {
     const workspace = await prisma.workspace.findFirst({
       where: {
         userId,
-        workspace_name: workspaceName,
+        workspace_name: {
+          contains: workspaceName,
+          mode: 'insensitive', 
+        },
       },
       include: {
         user: false,
@@ -108,7 +110,6 @@ class WorkspaceService {
 
     return workspace;
   }
-  
   static async deleteWorkspace(workspaceId: string, userId: string) {
     const workspace = await prisma.workspace.findFirst({
       where: {
