@@ -14,6 +14,9 @@ interface ErrorResponse {
   userId?: string;
   }
   
+  interface Participant {
+    id: string;
+  }
 
 
 class BountyService {
@@ -139,15 +142,17 @@ class BountyService {
           participants: true,
         },
       });
-
+  
       if (!bounty) {
         return false;
       }
-
-      const participants = bounty.participants.map((participant) => participant.id);
-      return participants.includes(userId);
+  
+      const participants: Participant[] = bounty.participants;
+      const isUserParticipant = participants.some((participant) => participant.id === userId);
+  
+      return isUserParticipant;
     } catch (error) {
-      console.error(error); // Log the error for debugging purposes
+      console.error(error);
       return false;
     }
   }
@@ -390,6 +395,67 @@ class BountyService {
       return [{ error: 'An error occurred while retrieving the participants.' }];
     }
   }
+
+  static async removeParticipant(
+    bountyId: string,
+    userId: string
+  ): Promise<Bounty | ErrorResponse> {
+    try {
+      const bounty = await prisma.bounty.findUnique({
+        where: {
+          id: bountyId,
+        },
+        include: {
+          createdByUser: true,
+          workspace: true,
+          participants: true,
+        },
+      });
+  
+      if (!bounty) {
+        return { error: 'Bounty not found.', statusCode: 404 };
+      }
+  
+      if (bounty.createdByUser.id === userId) {
+        return { error: 'You cannot remove yourself from your own bounty.', statusCode: 403 };
+      }
+  
+      const participant = await prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+  
+      if (!participant) {
+        return { error: 'User not found.', statusCode: 404 };
+      }
+  
+      const updatedBounty = await prisma.bounty.update({
+        where: {
+          id: bountyId,
+        },
+        data: {
+          participants: {
+            disconnect: {
+              id: userId,
+            },
+          },
+        },
+        include: {
+          createdByUser: true,
+          workspace: true,
+          participants: true,
+        },
+      });
+  
+      return updatedBounty;
+    } catch (error) {
+      console.error(error); // Log the error for debugging purposes
+  
+      return { error: 'An error occurred while removing the participant from the bounty.', statusCode: 500 };
+    }
+  }
+  
 
 }
 
