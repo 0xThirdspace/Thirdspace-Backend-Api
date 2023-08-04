@@ -1,3 +1,4 @@
+
 import  { Router, Request, Response, NextFunction } from 'express';
 import authenticateToken from '../../middleware/isAuth';
 import BountyService from './bounty.service';
@@ -183,6 +184,35 @@ router.get('/participants/:id', authenticateToken, async (req: Request, res: Res
   }
 });
 
+// DELETE /join/:id - Remove a joined user from a bounty by ID
+router.delete('/join/:id', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const bountyId = req.params.id;
+    const userId = (req as any).userId;
+
+    const bounty = await BountyService.getBountyById(bountyId);
+
+    if (!bounty) {
+      return res.status(404).json({ message: 'Bounty not found.' });
+    } 
+    
+    if (bounty.userId === userId) {
+      return res.status(403).json({ message: 'You cannot remove yourself from your own bounty.' });
+    }
+
+    const participantExists = await BountyService.isParticipantJoined(bountyId, userId);
+
+    if (!participantExists) {
+      return res.status(400).json({ message: 'You have not joined this bounty.' });
+    }
+
+    await BountyService.removeParticipant(bountyId, userId);
+    
+    res.status(200).json({ message: 'Removed from the bounty successfully.' });
+  } catch (error: any) {
+    return res.status(500).json(error.message);
+  }
+});
 
 
 
