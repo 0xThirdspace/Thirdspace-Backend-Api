@@ -7,3 +7,15 @@ Added essential configuration files like .env, docker-compose.yml, and package.j
 Set up the initial dependencies and scripts in package.json.
 Included a sample .env file with necessary environment variables.
 Added a README.md file to provide instructions and information about the project.
+
+Changes made in this commit:
+
+ Workspace owners should be able to add team members
+ Attach department to a team member
+ Remove/delete Team info
+ Delete All team members
+ Give team members role
+ Get all team members
+ Assign role to team members
+ Send an invite to a user's email
+ Accepting an invite
