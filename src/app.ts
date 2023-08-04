@@ -12,11 +12,14 @@ validateEnv();
 const prisma = new PrismaClient();
 const app = express();
 
+
+
 async function bootstrap() {
   app.use(express.json());
   app.use(cors());
 
   app.get("/api/healthcheck", (req: Request, res: Response) => {
+    console.log("Received a request at /api/healthcheck");
     const message = "Hello, welcome to thirdspace API.";
     res.status(200).json({
       status: "success",

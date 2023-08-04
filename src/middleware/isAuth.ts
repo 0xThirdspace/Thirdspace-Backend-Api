@@ -4,7 +4,9 @@ import JwtToken from "../../utils/jwt";
 interface CustomRequest extends Request {
   isAuth?: boolean;
   userId?: string;
+  
 }
+
 
 const authenticateToken = (
   req: CustomRequest,

@@ -16,6 +16,7 @@ model User {
   workspace            Workspace?
   createdBounties      Bounty[]   @relation("CreatedByUser")
   participatedBounties Bounty[]   @relation("Participant")
+  Team                 Team[]
 
   @@map(name: "users")
 }
@@ -27,8 +28,23 @@ model Workspace {
   userId         String   @unique
   user           User     @relation(fields: [userId], references: [id])
   bounties       Bounty[]
+  team           Team[]
 
   @@map(name: "workspaces")
+}
+
+model Team {
+  id          String     @id @default(uuid())
+  email       String
+  role        Role
+  department  Department
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id])
+  workspaceId String     
+  user        User       @relation(fields: [userId], references: [id])
+  userId      String
+
+  @@unique([workspaceId, userId], name: "team_unique")
+  @@map(name: "teams")
 }
 
 model Bounty {
@@ -54,4 +70,23 @@ enum Status {
   pending
   active
   closed
+}
+
+enum Department {
+  management
+  marketing
+  engineering
+  product
+  research
+  finance
+  sales
+  operations
+  human_resource
+  other
+}
+
+enum Role {
+  owner
+  admin
+  member
 }
