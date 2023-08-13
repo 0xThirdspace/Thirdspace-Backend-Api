@@ -19,38 +19,44 @@ class TaskService {
     userId: string,
     title: string,
     description: string,
-    attachments: any,
     due_date: Date,
-    comments: string,
-    KenbanId: string
+    KenbanId: string,
+    attachments?: any
   ): Promise<Tasks | ErrorResponse> {
-    if (!title) {
-      throw new Error("You need to provide a title for your task");
+    try {
+      const kenbanTask = await prisma.tasks.create({
+        data: {
+          title,
+          description,
+          due_date,
+          userId,
+          KenbanId,
+          attachments,
+        },
+        include: {
+          Assignees: true,
+          createdByUser: true,
+          KenbanBoard: true,
+        },
+      });
+
+      return kenbanTask;
+    } catch (error) {
+      console.error(error); // Log the error for debugging purposes
+
+      return { error: "An error occurred while creating task" };
     }
-
-    const kenbanTask = await prisma.tasks.create({
-      data: {
-        title,
-        description,
-        due_date,
-        userId,
-        attachments,
-        comments,
-        KenbanId,
-      },
-      include: {
-        Assignees: true,
-        createdByUser: true,
-        KenbanBoard: true,
-      },
-    });
-
-    return kenbanTask;
   }
 
   static async getAllTasks(): Promise<(Tasks | ErrorResponse)[]> {
     try {
-      const tasks = await prisma.tasks.findMany();
+      const tasks = await prisma.tasks.findMany({
+        include: {
+          Assignees: true,
+          createdByUser: true,
+          KenbanBoard: true,
+        },
+      });
 
       return tasks;
     } catch (error) {
@@ -187,7 +193,7 @@ class TaskService {
 
   static async addAssignees(
     taskId: string,
-    userId: string
+    assigned: string
   ): Promise<Tasks | ErrorResponse> {
     try {
       const task = await prisma.tasks.findUnique({
@@ -201,16 +207,16 @@ class TaskService {
       });
 
       if (!task) {
-        return { error: "Bounty not found.", statusCode: 404 };
+        return { error: "Task not found.", statusCode: 404 };
       }
 
-      const assignee = await prisma.tasks.findUnique({
+      const assignedUser = await prisma.user.findUnique({
         where: {
-          id: userId,
+          id: assigned,
         },
       });
 
-      if (!assignee) {
+      if (!assignedUser) {
         return { error: "User not found.", statusCode: 404 };
       }
 
@@ -221,7 +227,7 @@ class TaskService {
         data: {
           Assignees: {
             connect: {
-              id: userId,
+              id: assigned,
             },
           },
         },
@@ -236,9 +242,35 @@ class TaskService {
       console.error(error);
 
       return {
-        error: "An error occurred while adding the participant to the bounty.",
+        error: "An error occurred while assigning this person.",
         statusCode: 500,
       };
+    }
+  }
+
+  static async isMemberAssigned(
+    taskId: string,
+    userId: string
+  ): Promise<boolean> {
+    try {
+      const task = await prisma.tasks.findUnique({
+        where: {
+          id: taskId,
+        },
+        include: {
+          Assignees: true,
+        },
+      });
+
+      if (!task) {
+        return false;
+      }
+
+      const assignees = task.Assignees.map((assignee) => assignee.id);
+      return assignees.includes(userId);
+    } catch (error) {
+      console.error(error);
+      return false;
     }
   }
 

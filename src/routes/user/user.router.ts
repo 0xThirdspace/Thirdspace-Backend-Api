@@ -3,7 +3,7 @@ import authenticateToken from "../../middleware/isAuth";
 import { body, validationResult } from "express-validator";
 
 import * as UserService from "./user.service";
-import upload from "../../middleware/cloudinary";
+import { upload } from "../../middleware/cloudinary";
 
 export const userRouter = express.Router();
 

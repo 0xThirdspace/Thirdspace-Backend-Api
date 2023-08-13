@@ -84,14 +84,13 @@ model KenbanBoard {
 
 model Tasks {
   id            String      @id @default(uuid())
-  title         String      @unique @db.VarChar(255)
-  description   String      @unique @db.VarChar(255)
+  title         String      @db.VarChar(255)
+  description   String      @db.VarChar(255)
   attachments   String?     @default("attachment.png")
-  comments      String
   due_date      DateTime
   Assignees     User[]      @relation("Assignees")
   status        TaskStatus  @default(todo)
-  KenbanId      String      @unique
+  KenbanId      String
   KenbanBoard   KenbanBoard @relation(fields: [KenbanId], references: [id])
   userId        String
   createdByUser User        @relation("TaskCreatedByUser", fields: [userId], references: [id])
