@@ -2,6 +2,9 @@ import { Router, Request, Response, NextFunction } from "express";
 import authenticateToken from "../../middleware/isAuth";
 import WorkspaceService from "./workspace.service";
 import { upload } from "../../middleware/cloudinary";
+import upload from "../../middleware/cloudinary";
+import { sendMail } from "../../../utils/emailUtils";
+
 
 class BadRequestError extends Error {
   statusCode: number;
@@ -121,29 +124,24 @@ router.put(
     }
   },
   // DELETE /:workspaceId - Delete a workspace
-  router.delete(
-    "/:workspaceId",
-    authenticateToken,
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const { workspaceId } = req.params;
-        const userId = (req as any).userId;
+router.delete(
+  "/:workspaceId",
+  authenticateToken,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { workspaceId } = req.params;
+      const userId = (req as any).userId;
 
-        // Check if the workspace has any associated bounties
-        const hasBounties = await WorkspaceService.hasBounties(workspaceId);
+      // Check if the workspace has any associated bounties
+      const hasBounties = await WorkspaceService.hasBounties(workspaceId);
 
-        if (hasBounties) {
-          // If there are associated bounties, check if any of them have a status other than 'closed'
-          const areBountiesOpen = await WorkspaceService.areBountiesOpen(
-            workspaceId
-          );
+      if (hasBounties) {
+        // If there are associated bounties, check if any of them have a status other than 'closed'
+        const areBountiesOpen = await WorkspaceService.areBountiesOpen(workspaceId);
 
-          if (areBountiesOpen) {
-            // If any of the associated bounties are not closed, prevent workspace deletion
-            return res
-              .status(403)
-              .json({ message: "Cannot delete workspace with open bounties" });
-          }
+        if (areBountiesOpen) {
+          // If any of the associated bounties are not closed, prevent workspace deletion
+          return res.status(403).json({ message: "Cannot delete workspace with active bounties" });
         }
 
         // Delete the workspace and associated closed bounties
@@ -167,6 +165,197 @@ router.put(
       }
     }
   )
+);
+  }
+),
+// POST /invite/:workspaceId/:email - Send invitation to join workspace
+router.post(
+  "/invite/:workspaceId/:email",
+  authenticateToken,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { workspaceId, email } = req.params;
+      const userId = (req as any).userId;
+
+      // Assuming the role and department are passed as JSON in the request body
+      const { role, department } = req.body;
+
+      if (!role || !department) {
+        return res.status(400).json({ message: "Role and department are required." });
+      }
+  // Check if the user sending the invite is the owner of the workspace
+  const ownerRole = await WorkspaceService.getUserTeamRole(workspaceId, userId);
+  if (ownerRole !== "owner") {
+    return res.status(403).json({ message: "Only the owner can send invitations to the workspace." });
+  }
+
+
+      // Create an object with the user data to be embedded in the invitation link
+      const userData = JSON.stringify({ email, role, department });
+
+      // Convert the user data to base64 and add it to the invitation link
+      const encodedUserData = Buffer.from(userData).toString("base64");
+      const invitationLink = `http://localhost:6000/workspaces/accept-invite/${workspaceId}/${encodedUserData}`;
+
+      // Send the invitation email
+      await sendMail(email, invitationLink);
+
+      res.status(200).json({ message: "Invite has been successfully sent." });
+    } catch (error) {
+      console.log(error);
+      next(error as Error);
+    }
+  }
+),
+
+// GET /accept-invite/:workspaceId/:encodedUserData - Accept the invitation and join workspace
+router.get(
+  "/accept-invite/:workspaceId/:encodedUserData",
+  authenticateToken,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { workspaceId, encodedUserData } = req.params;
+
+      // Decode the user data from base64
+      const decodedUserData = Buffer.from(encodedUserData, "base64").toString();
+      const { email, role, department } = JSON.parse(decodedUserData);
+
+  
+      // Perform necessary checks on the invitation link and user data, e.g., validate workspaceId, email, etc.
+      // Here you can also check if the user is allowed to join based on their role and department
+       // Check if the user accepting the invitation is the same as the one specified in the invitation email
+ 
+    
+      // Add the user to the workspace with their role and department
+      await WorkspaceService.addUserToWorkspace(workspaceId, email, role, department, req);
+
+      res.status(200).json({ message: "You have joined the team successfully." });
+    } catch (error) {
+      console.log(error);
+      next(error as Error);
+    }
+  }
+)
+);
+
+// GET /users/:workspaceId - Get all users associated with the workspace
+router.get(
+  "/users/:workspaceId",
+  authenticateToken,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { workspaceId } = req.params;
+      const userId = (req as any).userId;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const users = await WorkspaceService.getUsersByWorkspaceId(workspaceId);
+
+      if (users && users.length > 0) {
+        res.status(200).json(users);
+      } else {
+        res.status(404).json({ message: "Users not found for the team" });
+      }
+    } catch (error) {
+      console.log(error);
+      next(error as Error);
+    }
+  }
+);
+
+// DELETE /users/:workspaceId/:userId - Delete a user from the team associated with a workspace
+router.delete(
+  "/users/:workspaceId/:userId",
+  authenticateToken,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { workspaceId, userId } = req.params;
+      const ownerId = (req as any).userId;
+
+      // Check if the user trying to delete another user is the owner of the workspace
+      const ownerRole = await WorkspaceService.getUserTeamRole(workspaceId, ownerId);
+
+      if (ownerRole !== "owner") {
+        return res.status(403).json({ message: "Only the owner can delete users from the team." });
+      }
+
+      // Delete the user from the team
+      const deletedUser = await WorkspaceService.deleteUserFromTeam(workspaceId, userId);
+
+      if (!deletedUser) {
+        return res.status(404).json({ message: "User not found in team." });
+      }
+
+      res.status(200).json({ message: "User deleted successfully from the team." });
+    } catch (error) {
+      console.log(error);
+      next(error as Error);
+    }
+  }
+);
+// DELETE /users/:workspaceId - Delete all users from the team associated with a workspace
+router.delete(
+  "/users/:workspaceId",
+  authenticateToken,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { workspaceId } = req.params;
+      const userId = (req as any).userId;
+
+      // Check if the user trying to delete all users is the owner of the team
+      const ownerRole = await WorkspaceService.getUserTeamRole(workspaceId, userId);
+
+      if (ownerRole !== "owner") {
+        return res.status(403).json({ message: "Only the owner can delete all users from the team." });
+      }
+
+      // Delete all users from the team
+      const deletedUsers = await WorkspaceService.deleteAllUsersFromTeam(workspaceId);
+
+      res.status(200).json({ message: "All users deleted successfully from the team." });
+    } catch (error) {
+      console.log(error);
+      next(error as Error);
+    }
+  }
+);
+// PUT /users/:workspaceId/:userId - Update user information on the team table
+router.put(
+  "/users/:workspaceId/:userId",
+  authenticateToken,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { workspaceId, userId } = req.params;
+      const ownerId = (req as any).userId;
+
+      // Check if the user trying to update user information is the owner of the workspace
+      const ownerRole = await WorkspaceService.getUserTeamRole(workspaceId, ownerId);
+
+      if (ownerRole !== "owner") {
+        return res.status(403).json({ message: "Only the owner can update user information in the team." });
+      }
+
+      // Update the user information on the team table
+      const { role, department } = req.body;
+      const updatedUser = await WorkspaceService.updateUserInformationOnTeam(
+        workspaceId,
+        userId,
+        role,
+        department
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      console.log(error);
+      next(error as Error);
+    }
+  }
 );
 
 export default router;
