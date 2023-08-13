@@ -3,7 +3,7 @@ import authenticateToken from "../../middleware/isAuth";
 import { body, validationResult } from "express-validator";
 
 import * as UserService from "./user.service";
-import upload from "../../middleware/cloudinary";
+import { upload } from "../../middleware/cloudinary";
 
 export const userRouter = express.Router();
 
@@ -30,6 +30,8 @@ userRouter.get(
       const user = await UserService.getUser(id);
       if (user) {
         return response.status(200).json(user);
+      } else {
+        return response.status(404).json("user not found");
       }
     } catch (error: any) {
       return response.status(500).json(error.message);
@@ -49,6 +51,11 @@ userRouter.put(
       const user = request.body;
       const files = request.files as Express.Multer.File[];
       let profileImage = null;
+
+      const isUser = await UserService.getUser(id);
+      if (!isUser) {
+        return response.status(404).json("user does not exist");
+      }
 
       if (files.length > 0) {
         const image = files[0];

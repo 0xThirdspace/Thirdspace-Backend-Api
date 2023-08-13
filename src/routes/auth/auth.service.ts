@@ -18,7 +18,7 @@ export type LoginCredentials = {
 export const signUp = async (user: Omit<User, "id">): Promise<any> => {
   const { name, email, password } = user;
 
-  const userExists = await db.user.findFirst({
+  const userExists = await db.user.findUnique({
     where: {
       email,
     },

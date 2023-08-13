@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import authenticateToken from "../../middleware/isAuth";
 import WorkspaceService from "./workspace.service";
+import { upload } from "../../middleware/cloudinary";
 import upload from "../../middleware/cloudinary";
 import { sendMail } from "../../../utils/emailUtils";
 
@@ -59,7 +60,6 @@ router.post(
       }
     }
   }
-  
 );
 
 // GET / - Get user workspace by name
@@ -89,10 +89,8 @@ router.get(
       console.log(error);
       next(error as Error);
     }
-  
   }
 );
-
 
 // PUT /:workspaceId - Update a workspace
 router.put(
@@ -124,7 +122,6 @@ router.put(
         next(error as Error);
       }
     }
-
   },
   // DELETE /:workspaceId - Delete a workspace
 router.delete(
@@ -146,24 +143,29 @@ router.delete(
           // If any of the associated bounties are not closed, prevent workspace deletion
           return res.status(403).json({ message: "Cannot delete workspace with active bounties" });
         }
-      }
 
-      // Delete the workspace and associated closed bounties
-      const deletedWorkspace = await WorkspaceService.deleteWorkspace(workspaceId, userId);
+        // Delete the workspace and associated closed bounties
+        const deletedWorkspace = await WorkspaceService.deleteWorkspace(
+          workspaceId,
+          userId
+        );
 
-      if (!deletedWorkspace) {
-        throw new BadRequestError("Workspace not found");
-      }
+        if (!deletedWorkspace) {
+          throw new BadRequestError("Workspace not found");
+        }
 
-      res.status(200).json({ message: "Workspace deleted successfully" });
-    } catch (error) {
-      console.log(error);
-      if ((error as Error).message === "Workspace not found") {
-        next({ status: 404, message: "Workspace not found" });
-      } else {
-        next(error as Error);
+        res.status(200).json({ message: "Workspace deleted successfully" });
+      } catch (error) {
+        console.log(error);
+        if ((error as Error).message === "Workspace not found") {
+          next({ status: 404, message: "Workspace not found" });
+        } else {
+          next(error as Error);
+        }
       }
     }
+  )
+);
   }
 ),
 // POST /invite/:workspaceId/:email - Send invitation to join workspace
@@ -355,6 +357,5 @@ router.put(
     }
   }
 );
-
 
 export default router;

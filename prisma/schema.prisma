@@ -8,26 +8,30 @@ datasource db {
 }
 
 model User {
-  id                   String     @id @default(uuid())
-  name                 String     @db.VarChar(255)
-  email                String     @unique
+  id                   String        @id @default(uuid())
+  name                 String        @db.VarChar(255)
+  email                String        @unique
   password             String
-  profileImage         String?    @default("user.png")
+  profileImage         String?       @default("user.png")
   workspace            Workspace?
-  createdBounties      Bounty[]   @relation("CreatedByUser")
-  participatedBounties Bounty[]   @relation("Participant")
+  createdBounties      Bounty[]      @relation("CreatedByUser")
+  createdTasks         Tasks[]       @relation("TaskCreatedByUser")
+  participatedBounties Bounty[]      @relation("Participant")
   Team                 Team[]
+  taskAssignees        Tasks[]       @relation("Assignees")
+  kenbanBoard          KenbanBoard[]
 
   @@map(name: "users")
 }
 
 model Workspace {
-  id             String   @id @default(uuid())
-  workspace_name String   @unique
-  imageUrl       String?  @default("workspace.png")
-  userId         String   @unique
-  user           User     @relation(fields: [userId], references: [id])
+  id             String        @id @default(uuid())
+  workspace_name String        @unique
+  imageUrl       String?       @default("workspace.png")
+  userId         String        @unique
+  user           User          @relation(fields: [userId], references: [id])
   bounties       Bounty[]
+  KenbanBoard    KenbanBoard[]
   team           Team[]
 
   @@map(name: "workspaces")
@@ -66,6 +70,34 @@ model Bounty {
   @@map(name: "bounties")
 }
 
+model KenbanBoard {
+  id          String    @id @default(uuid())
+  name        String
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  tasks       Tasks[]
+  createdBy   User      @relation(fields: [userId], references: [id])
+  userId      String
+
+  @@map(name: "kenbanboard")
+}
+
+model Tasks {
+  id            String      @id @default(uuid())
+  title         String      @db.VarChar(255)
+  description   String      @db.VarChar(255)
+  attachments   String?     @default("attachment.png")
+  due_date      DateTime
+  Assignees     User[]      @relation("Assignees")
+  status        TaskStatus  @default(todo)
+  KenbanId      String
+  KenbanBoard   KenbanBoard @relation(fields: [KenbanId], references: [id])
+  userId        String
+  createdByUser User        @relation("TaskCreatedByUser", fields: [userId], references: [id])
+
+  @@map(name: "tasks")
+}
+
 enum Status {
   pending
   active
@@ -89,4 +121,10 @@ enum Role {
   owner
   admin
   member
+}
+
+enum TaskStatus {
+  todo
+  inProgress
+  Done
 }

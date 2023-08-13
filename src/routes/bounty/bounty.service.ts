@@ -1,22 +1,22 @@
-import { PrismaClient, Bounty, User } from '@prisma/client';
+import { PrismaClient, Bounty, User } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 enum Status {
-  PENDING = 'pending',
-  ACTIVE = 'active',
-  CLOSED = 'closed',
+  PENDING = "pending",
+  ACTIVE = "active",
+  CLOSED = "closed",
 }
 
 interface ErrorResponse {
   error: string;
   statusCode?: number;
   userId?: string;
-  }
+}
   
-  interface Participant {
+interface Participant {
     id: string;
-  }
+}
 
 
 class BountyService {
@@ -39,7 +39,9 @@ class BountyService {
       });
 
       if (!workspace) {
-        return { error: "Current login user is not the owner of the workspace." };
+        return {
+          error: "Current login user is not the owner of the workspace.",
+        };
       }
 
       const bounty = await prisma.bounty.create({
@@ -82,7 +84,7 @@ class BountyService {
     } catch (error) {
       console.error(error); // Log the error for debugging purposes
 
-      return [{ error: 'An error occurred while retrieving all bounties.' }];
+      return [{ error: "An error occurred while retrieving all bounties." }];
     }
   }
 
@@ -106,12 +108,17 @@ class BountyService {
       console.error(error); // Log the error for debugging purposes
 
       return [
-        { error: 'An error occurred while retrieving the bounties created by the user.' },
+        {
+          error:
+            "An error occurred while retrieving the bounties created by the user.",
+        },
       ];
     }
   }
 
-  static async getBountyById(bountyId: string): Promise<Bounty | null | ErrorResponse> {
+  static async getBountyById(
+    bountyId: string
+  ): Promise<Bounty | null | ErrorResponse> {
     try {
       const bounty = await prisma.bounty.findUnique({
         where: {
@@ -128,11 +135,14 @@ class BountyService {
     } catch (error) {
       console.error(error); // Log the error for debugging purposes
 
-      return { error: 'An error occurred while retrieving the bounty.' };
+      return { error: "An error occurred while retrieving the bounty." };
     }
   }
 
-  static async isParticipantJoined(bountyId: string, userId: string): Promise<boolean> {
+  static async isParticipantJoined(
+    bountyId: string,
+    userId: string
+  ): Promise<boolean> {
     try {
       const bounty = await prisma.bounty.findUnique({
         where: {
@@ -156,11 +166,10 @@ class BountyService {
       return false;
     }
   }
-  
 
   static async deleteBounty(
     userId: string,
-    bountyId: string,
+    bountyId: string
   ): Promise<Bounty | null | ErrorResponse> {
     try {
       const bounty = await prisma.bounty.findFirst({
@@ -174,31 +183,28 @@ class BountyService {
           participants: true,
         },
       });
-  
+
       if (!bounty) {
         return null;
       }
-  
-      if (bounty.status !== 'closed') {
+
+      if (bounty.status !== "closed") {
         return null;
       }
-  
+
       await prisma.bounty.delete({
         where: {
           id: bountyId,
         },
       });
-  
+
       return bounty;
     } catch (error) {
       console.error(error); // Log the error for debugging purposes
-  
-      return { error: 'An error occurred while deleting the bounty.' };
+
+      return { error: "An error occurred while deleting the bounty." };
     }
   }
-  
-  
-  
 
   static async deleteAllBountiesCreatedByUser(
     userId: string
@@ -213,7 +219,8 @@ class BountyService {
       console.error(error); // Log the error for debugging purposes
 
       return {
-        error: 'An error occurred while deleting the bounties created by the user.',
+        error:
+          "An error occurred while deleting the bounties created by the user.",
       };
     }
   }
@@ -269,7 +276,7 @@ class BountyService {
     } catch (error) {
       console.error(error); // Log the error for debugging purposes
 
-      return { error: 'An error occurred while updating the bounty status.' };
+      return { error: "An error occurred while updating the bounty status." };
     }
   }
 
@@ -308,7 +315,7 @@ class BountyService {
     } catch (error) {
       console.error(error); // Log the error for debugging purposes
 
-      return { error: 'An error occurred while updating the bounty.' };
+      return { error: "An error occurred while updating the bounty." };
     }
   }
 
@@ -327,25 +334,25 @@ class BountyService {
           participants: true,
         },
       });
-  
+
       if (!bounty) {
-        return { error: 'Bounty not found.', statusCode: 404 };
+        return { error: "Bounty not found.", statusCode: 404 };
       }
-  
+
       if (bounty.createdByUser.id === userId) {
-        return { error: 'You cannot join your own bounty.', statusCode: 403 };
+        return { error: "You cannot join your own bounty.", statusCode: 403 };
       }
-  
+
       const participant = await prisma.user.findUnique({
         where: {
           id: userId,
         },
       });
-  
+
       if (!participant) {
-        return { error: 'User not found.', statusCode: 404 };
+        return { error: "User not found.", statusCode: 404 };
       }
-  
+
       const updatedBounty = await prisma.bounty.update({
         where: {
           id: bountyId,
@@ -363,15 +370,20 @@ class BountyService {
           participants: true,
         },
       });
-  
+
       return updatedBounty;
     } catch (error) {
       console.error(error); // Log the error for debugging purposes
-  
-      return { error: 'An error occurred while adding the participant to the bounty.', statusCode: 500 };
+
+      return {
+        error: "An error occurred while adding the participant to the bounty.",
+        statusCode: 500,
+      };
     }
   }
-  static async getAllParticipants(bountyId: string): Promise<(User | ErrorResponse)[]> {
+  static async getAllParticipants(
+    bountyId: string
+  ): Promise<(User | ErrorResponse)[]> {
     try {
       const bounty = await prisma.bounty.findUnique({
         where: {
@@ -392,7 +404,9 @@ class BountyService {
     } catch (error) {
       console.error(error); // Log the error for debugging purposes
 
-      return [{ error: 'An error occurred while retrieving the participants.' }];
+      return [
+        { error: "An error occurred while retrieving the participants." },
+      ];
     }
   }
 
@@ -455,8 +469,6 @@ class BountyService {
       return { error: 'An error occurred while removing the participant from the bounty.', statusCode: 500 };
     }
   }
-  
-
 }
 
 export default BountyService;

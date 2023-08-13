@@ -6,6 +6,7 @@ export type UserProfile = {
   id: string;
   name: string;
   email: string;
+  profileImage: any;
 };
 
 export const getAllUsers = async (): Promise<Omit<User, "password">[]> => {
@@ -20,9 +21,7 @@ export const getAllUsers = async (): Promise<Omit<User, "password">[]> => {
   return users.map(({ id, name, email }) => ({ id, name, email }));
 };
 
-export const getUser = async (
-  id: string
-): Promise<Omit<User, "password"> | null> => {
+export const getUser = async (id: string): Promise<any> => {
   const user = await db.user.findUnique({
     where: {
       id,
@@ -31,6 +30,7 @@ export const getUser = async (
       id: true,
       name: true,
       email: true,
+      profileImage: true,
     },
   });
 
@@ -39,6 +39,7 @@ export const getUser = async (
       id: user.id,
       name: user.name,
       email: user.email,
+      profileImage: user.profileImage,
     };
   }
 

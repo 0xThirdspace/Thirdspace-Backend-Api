@@ -34,6 +34,28 @@ const fileFilter = (
   }
 };
 
+const pdfFilter = (
+  req: Request,
+  file: Express.Multer.File,
+  cb: (error: Error | null, acceptFile: boolean) => void
+) => {
+  if (
+    file.mimetype === "image/png" ||
+    file.mimetype === "image/jpeg" ||
+    file.mimetype === "image/jpg" ||
+    file.mimetype === "application/pdf"
+  ) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        "Invalid file type. Only PNG, JPEG, PDF and JPG files are allowed."
+      ),
+      false
+    );
+  }
+};
+
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -41,9 +63,19 @@ const storage = new CloudinaryStorage({
   } as Params,
 });
 
-const upload = multer({
+const kenbanStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "kenban board",
+  } as Params,
+});
+
+export const kenbanUpload = multer({
+  storage: kenbanStorage,
+  fileFilter: pdfFilter as any,
+});
+
+export const upload = multer({
   storage: storage,
   fileFilter: fileFilter as any,
 });
-
-export default upload;
