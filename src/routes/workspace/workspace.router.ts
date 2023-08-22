@@ -2,7 +2,6 @@ import { Router, Request, Response, NextFunction } from "express";
 import authenticateToken from "../../middleware/isAuth";
 import WorkspaceService from "./workspace.service";
 import { upload } from "../../middleware/cloudinary";
-import upload from "../../middleware/cloudinary";
 import { sendMail } from "../../../utils/emailUtils";
 
 
@@ -155,19 +154,20 @@ router.delete(
         }
 
         res.status(200).json({ message: "Workspace deleted successfully" });
-      } catch (error) {
-        console.log(error);
-        if ((error as Error).message === "Workspace not found") {
-          next({ status: 404, message: "Workspace not found" });
-        } else {
-          next(error as Error);
-        }
+      }
+    } catch (error) {
+      console.log(error);
+      if ((error as Error).message === "Workspace not found") {
+        next({ status: 404, message: "Workspace not found" });
+      } else {
+        next(error as Error);
       }
     }
-  )
-);
   }
-),
+)
+);
+
+
 // POST /invite/:workspaceId/:email - Send invitation to join workspace
 router.post(
   "/invite/:workspaceId/:email",
@@ -235,7 +235,6 @@ router.get(
       next(error as Error);
     }
   }
-)
 );
 
 // GET /users/:workspaceId - Get all users associated with the workspace
