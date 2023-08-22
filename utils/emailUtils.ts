@@ -8,8 +8,8 @@ async function sendMail(receiverEmail: string, invitationLink: string) {
       port: 587,
       secure: false,
       auth: {
-        user: "wealthmanagers4@gmail.com", 
-        pass: "lacfwmudimhzlmjq", 
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS,
       },
     });
 

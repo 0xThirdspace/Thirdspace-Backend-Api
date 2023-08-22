@@ -195,7 +195,7 @@ router.post(
 
       // Convert the user data to base64 and add it to the invitation link
       const encodedUserData = Buffer.from(userData).toString("base64");
-      const invitationLink = `http://localhost:6000/workspaces/accept-invite/${workspaceId}/${encodedUserData}`;
+      const invitationLink = `https://api.oxthirdspace.xyz/workspaces/accept-invite/${workspaceId}/${encodedUserData}`;
 
       // Send the invitation email
       await sendMail(email, invitationLink);
@@ -221,10 +221,7 @@ router.get(
       const { email, role, department } = JSON.parse(decodedUserData);
 
   
-      // Perform necessary checks on the invitation link and user data, e.g., validate workspaceId, email, etc.
-      // Here you can also check if the user is allowed to join based on their role and department
-       // Check if the user accepting the invitation is the same as the one specified in the invitation email
- 
+      
     
       // Add the user to the workspace with their role and department
       await WorkspaceService.addUserToWorkspace(workspaceId, email, role, department, req);
