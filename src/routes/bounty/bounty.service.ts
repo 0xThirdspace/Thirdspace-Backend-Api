@@ -133,7 +133,7 @@ class BountyService {
 
       return bounty;
     } catch (error) {
-      console.error(error); // Log the error for debugging purposes
+      console.error(error); 
 
       return { error: "An error occurred while retrieving the bounty." };
     }
@@ -200,7 +200,7 @@ class BountyService {
 
       return bounty;
     } catch (error) {
-      console.error(error); // Log the error for debugging purposes
+      console.error(error); 
 
       return { error: "An error occurred while deleting the bounty." };
     }
@@ -216,7 +216,7 @@ class BountyService {
         },
       });
     } catch (error) {
-      console.error(error); // Log the error for debugging purposes
+      console.error(error); 
 
       return {
         error:
@@ -235,8 +235,7 @@ class BountyService {
 
       return bounty;
     } catch (error) {
-      console.error(error); // Log the error for debugging purposes
-
+      console.error(error); 
       return null;
     }
   }
@@ -274,8 +273,7 @@ class BountyService {
 
       return updatedBounty;
     } catch (error) {
-      console.error(error); // Log the error for debugging purposes
-
+      console.error(error); 
       return { error: "An error occurred while updating the bounty status." };
     }
   }
@@ -313,8 +311,7 @@ class BountyService {
 
       return updatedBounty;
     } catch (error) {
-      console.error(error); // Log the error for debugging purposes
-
+      console.error(error); 
       return { error: "An error occurred while updating the bounty." };
     }
   }
@@ -373,7 +370,7 @@ class BountyService {
 
       return updatedBounty;
     } catch (error) {
-      console.error(error); // Log the error for debugging purposes
+      console.error(error); 
 
       return {
         error: "An error occurred while adding the participant to the bounty.",
@@ -402,7 +399,7 @@ class BountyService {
 
       return participants;
     } catch (error) {
-      console.error(error); // Log the error for debugging purposes
+      console.error(error); 
 
       return [
         { error: "An error occurred while retrieving the participants." },
@@ -464,7 +461,7 @@ class BountyService {
   
       return updatedBounty;
     } catch (error) {
-      console.error(error); // Log the error for debugging purposes
+      console.error(error); 
   
       return { error: 'An error occurred while removing the participant from the bounty.', statusCode: 500 };
     }

@@ -20,6 +20,7 @@ model User {
   Team                 Team[]
   taskAssignees        Tasks[]       @relation("Assignees")
   kenbanBoard          KenbanBoard[]
+  Message              Message[]
 
   @@map(name: "users")
 }
@@ -43,7 +44,7 @@ model Team {
   role        Role
   department  Department
   workspace   Workspace  @relation(fields: [workspaceId], references: [id])
-  workspaceId String     
+  workspaceId String
   user        User       @relation(fields: [userId], references: [id])
   userId      String
 
@@ -96,6 +97,29 @@ model Tasks {
   createdByUser User        @relation("TaskCreatedByUser", fields: [userId], references: [id])
 
   @@map(name: "tasks")
+}
+
+model Chat {
+  id        String    @id @default(uuid())
+  members   String[]
+  timestamp DateTime  @default(now())  
+  Message   Message[]
+
+  @@map(name: "chats")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  chatId    String
+  senderId  String
+  text      String
+  imageUrl  String?
+  timestamp DateTime @default(now())
+
+  chat   Chat @relation(fields: [chatId], references: [id])
+  sender User @relation(fields: [senderId], references: [id])
+
+  @@map(name: "messages")
 }
 
 enum Status {

@@ -426,11 +426,6 @@ class WorkspaceService {
     return updatedUser;
   }
 }
-
-
-
-
-
 export default WorkspaceService;
 export const hasBounties = WorkspaceService.hasBounties;
 export const areBountiesOpen = WorkspaceService.areBountiesOpen;

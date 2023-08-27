@@ -8,13 +8,13 @@ async function sendMail(receiverEmail: string, invitationLink: string) {
       port: 587,
       secure: false,
       auth: {
-        user: "wealthmanagers4@gmail.com", // Replace with your Gmail email address
-        pass: "lacfwmudimhzlmjq", // Replace with your Gmail password or app password
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS,
       },
     });
 
     const mailOptions = {
-      from: "wealthmanagers4@gmail.com", // Replace with your Gmail email address
+      from: "wealthmanagers4@gmail.com", 
       to: receiverEmail,
       subject: "Workspace Invitation",
       html: `<p>You have been invited to join the workspace. Click <a href="${invitationLink}">here</a> to join.</p>`,

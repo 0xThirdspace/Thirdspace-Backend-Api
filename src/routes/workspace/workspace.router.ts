@@ -2,7 +2,6 @@ import { Router, Request, Response, NextFunction } from "express";
 import authenticateToken from "../../middleware/isAuth";
 import WorkspaceService from "./workspace.service";
 import { upload } from "../../middleware/cloudinary";
-import upload from "../../middleware/cloudinary";
 import { sendMail } from "../../../utils/emailUtils";
 
 
@@ -155,19 +154,20 @@ router.delete(
         }
 
         res.status(200).json({ message: "Workspace deleted successfully" });
-      } catch (error) {
-        console.log(error);
-        if ((error as Error).message === "Workspace not found") {
-          next({ status: 404, message: "Workspace not found" });
-        } else {
-          next(error as Error);
-        }
+      }
+    } catch (error) {
+      console.log(error);
+      if ((error as Error).message === "Workspace not found") {
+        next({ status: 404, message: "Workspace not found" });
+      } else {
+        next(error as Error);
       }
     }
-  )
-);
   }
-),
+)
+);
+
+
 // POST /invite/:workspaceId/:email - Send invitation to join workspace
 router.post(
   "/invite/:workspaceId/:email",
@@ -195,7 +195,7 @@ router.post(
 
       // Convert the user data to base64 and add it to the invitation link
       const encodedUserData = Buffer.from(userData).toString("base64");
-      const invitationLink = `http://localhost:6000/workspaces/accept-invite/${workspaceId}/${encodedUserData}`;
+      const invitationLink = `https://api.oxthirdspace.xyz/workspaces/accept-invite/${workspaceId}/${encodedUserData}`;
 
       // Send the invitation email
       await sendMail(email, invitationLink);
@@ -221,10 +221,7 @@ router.get(
       const { email, role, department } = JSON.parse(decodedUserData);
 
   
-      // Perform necessary checks on the invitation link and user data, e.g., validate workspaceId, email, etc.
-      // Here you can also check if the user is allowed to join based on their role and department
-       // Check if the user accepting the invitation is the same as the one specified in the invitation email
- 
+      
     
       // Add the user to the workspace with their role and department
       await WorkspaceService.addUserToWorkspace(workspaceId, email, role, department, req);
@@ -235,7 +232,6 @@ router.get(
       next(error as Error);
     }
   }
-)
 );
 
 // GET /users/:workspaceId - Get all users associated with the workspace
